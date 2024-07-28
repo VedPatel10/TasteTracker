@@ -29,7 +29,9 @@ const navbar = () => {
                         </li>
                         <li>
                             <SignedOut>
-                                <SignInButton className="text-black bg-white hover:bg-gradient-to-br focus:ring-3 focus:outline-none font-medium rounded px-5 text-center me-2 mb-2" />
+                                <div className="text-black bg-white hover:bg-gradient-to-br focus:ring-3 focus:outline-none font-medium rounded px-5 text-center me-2 mb-2" >
+                                    <SignInButton />
+                                </div>
                             </SignedOut>
                             <SignedIn>
                                 <UserButton />
