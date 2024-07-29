@@ -1,9 +1,10 @@
-## TasteTracker ![image](https://github.com/vedpatel10/TasteTracker/blob/master/public/images/TTBG.png?raw=true)
+## TasteTracker 
 
 NOW LIVE: Go to https://recipe-app3-six.vercel.app/ to use TasteTracker!
 
 TasteTracker uses Clerk to allow for seamless authentication. You can use a Google account or create a username to sign up. All of your recipes will be saved in your account.
 
+A Supabase database is used to store all recipes.
 
 
 
