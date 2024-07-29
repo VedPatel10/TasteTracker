@@ -1,3 +1,15 @@
+## TasteTracker
+
+NOW LIVE: Go to https://recipe-app3-six.vercel.app/ to use TasteTracker!
+
+TasteTracker uses Clerk to allow for seamless authentication. You can use a Google account or create a username to sign up. All of your recipes will be saved in your account.
+
+
+
+
+
+
+
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
 ## Getting Started
