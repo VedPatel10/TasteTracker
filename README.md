@@ -1,4 +1,4 @@
-## TasteTracker ![image](https://github.com/vedpatel10/TasteTracker/blob/master/TTBG.png?raw=true)
+## TasteTracker ![image](https://github.com/vedpatel10/TasteTracker/blob/master/public/images/TTBG.png?raw=true)
 
 NOW LIVE: Go to https://recipe-app3-six.vercel.app/ to use TasteTracker!
 
