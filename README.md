@@ -6,7 +6,9 @@ Use TasteTracker to easily save, share, and browse recipes. No more tracking mea
 
 TasteTracker uses Clerk to allow for seamless authentication. You can use a Google account or create a username to sign up. All of your recipes will be saved in your account.
 
-A Supabase database is used to store all recipes.
+Mongodb is used to store and manage recipe data. The MongoDB client is initialized in the lib/mongodb.js. 
+
+Backend APIs were made using Next.js API Routes which is built on top of Node.js.
 
 This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 

@@ -15,87 +15,77 @@ export default function Home() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const { user } = useUser();
-  const { session } = useSession();
   const [formError, setFormError] = useState('');
+  const [isGlobal, setisGlobal] = useState(false) 
 
-  const [isChecked, setIsChecked] = useState(false)
-
-  function createClerkSupabaseClient() {
-    return createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_KEY!,
-      {
-        global: {
-          fetch: async (url, options = {}) => {
-            const clerkToken = await session?.getToken({
-              template: 'supabase',
-            });
-
-            const headers = new Headers(options?.headers);
-            headers.set('Authorization', `Bearer ${clerkToken}`);
-
-            return fetch(url, {
-              ...options,
-              headers,
-            });
-          },
-        },
-      }
-    );
+  const handleCheckboxToggle = () => {
+    setisGlobal(!isGlobal)
   }
 
-  const client = createClerkSupabaseClient();
-
-  const loadTasks = async () => {
+  const loadRecipes = async () => {
     if (!user) return
     setLoading(true);
-    const { data, error } = await client.from('tasks').select().eq('user_id', user.id);
-    if (error) {
-      console.log('Error loading tasks:', error);
-    } else {
-      setTasks(data);
-    }
+
+    const response = await fetch('/api/loadMyRecipes', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({user_id: user.id})
+    });
+    const data = await response.json();
+    setTasks(data);
     setLoading(false);
-  };
+  }
 
-  async function createTask(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-
+  const saveRecipe = async () => {
+    
     if (!name || !description) {
       setFormError('Please fill in all fields');
       return;
     }
     if (!user) return
+    
+    const recipeData = {
+      title: name,
+      description: description,
+      user_id: user.id,
+      isGlobal: isGlobal
+    };
+  
+    const response = await fetch('/api/addRecipe', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(recipeData),
+    });
+    const data = await response.json();
+    return data;
+  };
+  
+  const deleteRecipe = async ( name: String, description: String ) => {
+    if (!user) return
 
-    const { error } = await client.from('tasks').insert([{ name, description, user_id: user.id, public: isChecked }]);
+    const recipeData = {
+      title: name,
+      description: description,
+      user_id: user.id
+    };
 
-    if (error) {
-      console.error('Error creating task:', error);
-    } else {
-      setName('');
-      setDescription('');
-      setFormError('');
-      loadTasks();
-    }
-  }
-
-  // remember you need to add policy in supabase!!!
-  const handleDelete = async (id: number) => {
-    const response = await client.from('tasks').delete().eq('id', id)
-    if (response.error) {
-      console.error('Error deleting task:', response.error);
-    } else {
-      loadTasks(); // Refresh the task list after deletion
-    }
-  }
-
-  const handleCheckboxToggle = () => {
-    setIsChecked(!isChecked)
+    await fetch('/api/deleteRecipe', {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(recipeData)
+    });
+    loadRecipes();
   }
 
   useEffect(() => {
     if (!user) return;
-    loadTasks();
+    loadRecipes();
   }, [user]);
 
   return (
@@ -105,7 +95,7 @@ export default function Home() {
 
           <div className='flex flex-row gap-3'>
             <h2 className="text-2xl font-semibold mb-4">My Recipes</h2>
-            {user && <button className="pb-3" onClick={loadTasks}><FontAwesomeIcon icon={faRefresh} /></button>}
+            {user && <button className="pb-3" onClick={loadRecipes}><FontAwesomeIcon icon={faRefresh} /></button>}
           </div>
 
           {!user && <p>Sign in to start saving recipes!</p>}
@@ -116,9 +106,9 @@ export default function Home() {
             <div className="grid grid-cols-2 gap-4">
               {tasks.map((task: any) => (
                 <div key={task.id} className="bg-white shadow-md rounded-lg p-4">
-                  <h3 className="text-lg font-semibold break-words whitespace-pre-wrap overflow-hidden">{task.name}</h3>
-                  <p className='text-sm break-words whitespace-pre-wrap overflow-hidden'>{task.description}</p>
-                  <button onClick={() => handleDelete(task.id)} className="text-grey-100 hover:text-grey-700 focus:outline-none"><FontAwesomeIcon icon={faTrash} /></button>
+                  <h3 key="title" className="text-lg font-semibold break-words whitespace-pre-wrap overflow-hidden">{task.title}</h3>
+                  <p key="description" className='text-sm break-words whitespace-pre-wrap overflow-hidden'>{task.description}</p>
+                  <button key="delete" title="Delete Recipe" onClick={() => deleteRecipe(task.title, task.description)} className="text-grey-100 hover:text-grey-700 focus:outline-none"><FontAwesomeIcon icon={faTrash} /></button>
                 </div>
               ))}
             </div>
@@ -127,7 +117,7 @@ export default function Home() {
 
         <div>
           <h2 className="text-2xl font-semibold mb-4">Add Recipe</h2>
-          <form onSubmit={createTask} className="bg-white shadow-md rounded-lg p-6">
+          <form onSubmit={saveRecipe} className="bg-white shadow-md rounded-lg p-6">
             <div className="relative z-0 w-full mb-5 group">
               <input
                 type="text"
@@ -160,7 +150,7 @@ export default function Home() {
             </div>
             <div className="flex items-center mb-4">
               <input
-                checked={isChecked}
+                checked={isGlobal}
                 onChange={handleCheckboxToggle}
                 id="checkbox-1"
                 type="checkbox"

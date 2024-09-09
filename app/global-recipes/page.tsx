@@ -13,86 +13,47 @@ export default function GlobalRecipesPage() {
     const [tasks, setTasks] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const { user } = useUser();
-    const { session } = useSession();
-
     const [searchResult, setSearchResult] = useState('')
 
-    // when creating client, if logged in, use clerk token and supabase info, otherwise, just use supabase info
-    function createClerkSupabaseClient() {
-        if (user) {
-            return createClient(
-                process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                process.env.NEXT_PUBLIC_SUPABASE_KEY!,
-                {
-                    global: {
-                        fetch: async (url, options = {}) => {
-                            const clerkToken = await session?.getToken({
-                                template: 'supabase',
-                            });
-
-                            const headers = new Headers(options?.headers);
-                            headers.set('Authorization', `Bearer ${clerkToken}`);
-
-                            return fetch(url, {
-                                ...options,
-                                headers,
-                            });
-                        },
-                    },
-                }
-            );
-        } else {
-            return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.NEXT_PUBLIC_SUPABASE_KEY!)
-        }
-    }
-
-    const client = createClerkSupabaseClient();
-
-    const handleCopy = async (name: string, description: string) => {
+    const copyRecipe = async (name: String, description: String) => {
         if (!user) return
-        const { error } = await client.from('tasks').insert([{ name, description, user_id: user.id, public: false }])
-        if (error) {
-            console.error('Error creating task:', error);
+
+        const recipeData = {
+            title: name,
+            description: description,
+            user_id: user.id,
+            isGlobal: false
         }
+
+        const response = await fetch('/api/copyRecipe', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(recipeData)
+        });
+
+        const data = await response.json();
+        return data;
     }
 
-    const loadTasks = async () => {
-        setLoading(true)
-
-        if (searchResult == '') {
-            const { data, error } = await client
-                .from('tasks')
-                .select()
-                .eq('public', 'TRUE')
-            // console.log(data)
-            // console.log("post")
-
-            if (error) {
-                console.log('Error loading tasks:', error);
-            } else {
-                setTasks(data);
-                setLoading(false)
-            }
-        } else {
-            const { data, error } = await client
-                .from('tasks')
-                .select()
-                .eq('public', 'TRUE')
-                .textSearch('name', searchResult)
-
-            if (error) {
-                console.log('Error loading tasks:', error);
-            } else {
-                setTasks(data);
-                setLoading(false)
-            }
-
-        }
-
-    };
+    const loadRecipes = async () => {
+        if (!user) return
+        setLoading(true);
+    
+        const response = await fetch('/api/loadGlobalRecipes', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          }   
+        });
+        const data = await response.json();
+        setTasks(data);
+        setLoading(false);
+      }
 
     useEffect(() => {
-        loadTasks()
+        loadRecipes()
     }, []);
 
     return (
@@ -119,8 +80,9 @@ export default function GlobalRecipesPage() {
                 </div>
 
                 <button
+                    title="Refresh Recipes"
                     className="bg-blue-500 text-white px-4 py-2 rounded-full hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:ring-opacity-50"
-                    onClick={loadTasks}>
+                    onClick={loadRecipes}>
                     <FontAwesomeIcon icon={faSearch} />
                 </button>
             </div>
@@ -133,10 +95,10 @@ export default function GlobalRecipesPage() {
                     <div className="grid grid-cols-4 gap-4">
                         {tasks.map((task: any) => (
                             <div key={task.id} className="bg-white shadow-md rounded-lg p-4">
-                                <h3 className="text-lg font-semibold break-words whitespace-pre-wrap overflow-hidden">{task.name}</h3>
-                                <p className='text-sm break-words whitespace-pre-wrap overflow-hidden'>{task.description}</p>
+                                <h3 key="title" className="text-lg font-semibold break-words whitespace-pre-wrap overflow-hidden">{task.title}</h3>
+                                <p key="description" className='text-sm break-words whitespace-pre-wrap overflow-hidden'>{task.description}</p>
                                 {/* only show copy button if user is singed in */}
-                                {user && (<button onClick={() => handleCopy(task.name, task.description)} className=" hover:text-blue-700 focus:outline-none"><FontAwesomeIcon icon={faFileClipboard} /></button>)}
+                                {user && (<button title="Save to My Recipes" onClick={() => copyRecipe(task.title, task.description)} className=" hover:text-blue-700 focus:outline-none"><FontAwesomeIcon icon={faFileClipboard} /></button>)}
                             </div>
                         ))}
                     </div>
