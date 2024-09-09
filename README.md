@@ -1,7 +1,5 @@
 ## TasteTracker 
 
-NOW LIVE: Go to https://recipe-app3-six.vercel.app/ to use TasteTracker!
-
 Use TasteTracker to easily save, share, and browse recipes. No more tracking meals in your head!
 
 TasteTracker uses Clerk to allow for seamless authentication. You can use a Google account or create a username to sign up. All of your recipes will be saved in your account.
